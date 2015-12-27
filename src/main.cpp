@@ -1,15 +1,18 @@
+/*
+ * Copyright 2015 Nihlaeth
+ */
 #include "Arduino.h"
 
 #ifndef LED_PIN
 #define LED_PIN 13
 #endif
 
-//Revision 1.2 (DEV-09628)
-#define MAX_RESET 8 //MAX3421E pin 12
-#define MAX_GPX   7 //MAX3421E pin 17
-//Revision 1.3 (DEV-09947)
-#define MAX_RESET 7 //MAX3421E pin 12
-#define MAX_GPX   8 //MAX3421E pin 17
+// Revision 1.2 (DEV-09628)
+#define MAX_RESET 8 // MAX3421E pin 12
+#define MAX_GPX   7 // MAX3421E pin 17
+// Revision 1.3 (DEV-09947)
+#define MAX_RESET 7 // MAX3421E pin 12
+#define MAX_GPX   8 // MAX3421E pin 17
 
 #include <hidboot.h>
 #include <usbhub.h>
@@ -71,13 +74,16 @@ void setup() {
     pinMode(MAX_GPX, INPUT);
     pinMode(MAX_RESET, OUTPUT);
     digitalWrite(MAX_RESET, LOW);
-    delay(20); //wait 20ms
+    delay(20); // wait 20ms
     digitalWrite(MAX_RESET, HIGH);
-    delay(20); //wait 20ms
+    delay(20); // wait 20ms
     Serial.begin(38400);
     Serial.println("Start");
-    if (Usb.Init() == -1)
-    Serial.println("OSC did not start.");
+    if (Usb.Init() == -1) {
+        Serial.println("OSC did not start.");
+    } else {
+        Serial.println("OSC started.");
+    }
     delay(200);
     next_time = millis() + 5000;
     HidMouse.SetReportParser(0, (HIDReportParser*)&Prs);
