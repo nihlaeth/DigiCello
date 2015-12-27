@@ -14,8 +14,43 @@
 #define MAX_RESET 7 // MAX3421E pin 12
 #define MAX_GPX   8 // MAX3421E pin 17
 
+
+#include <hid.h>
+#include <hiduniversal.h>
+#include <hidescriptorparser.h>
+
 #include <hidboot.h>
 #include <usbhub.h>
+
+#include "./pgmstrings.h"
+
+class HIDUniversal2 : public HIDUniversal {
+ public:
+    HIDUniversal2(USB *usb) : HIDUniversal(usb) {}
+ protected:
+    uint8_t OnInitSuccessful();
+};
+
+uint8_t HIDUniversal2::OnInitSuccessful() {
+    uint8_t rcode;
+    HexDumper<USBReadParser, uint16_t, uint16_t> Hex;
+    ReportDescParser Rpt;
+    if ((rcode = GetReportDescr(0, &Hex)))
+        goto FailGetReportDescr1;
+    if ((rcode = GetReportDescr(0, &Rpt)))
+        goto FailGetReportDescr2;
+    return 0;
+FailGetReportDescr1:
+    USBTRACE("GetReportDescr1:");
+    goto Fail;
+FailGetReportDescr2:
+    USBTRACE("GetReportDescr2:");
+    goto Fail;
+Fail:
+    Serial.println(rcode, HEX);
+    Release();
+    return rcode;
+}
 
 class MouseRptParser : public MouseReportParser {
  protected:
@@ -65,6 +100,9 @@ HIDBoot<HID_PROTOCOL_MOUSE> HidMouse(&Usb);
 uint32_t next_time;
 MouseRptParser Prs;
 
+HIDUniversal2 Hid(&Usb);
+UniversalReportParser Uni;
+
 void setup() {
     /*
      * Reset of the usb host shield is on pin 7,
@@ -87,6 +125,9 @@ void setup() {
     delay(200);
     next_time = millis() + 5000;
     HidMouse.SetReportParser(0, (HIDReportParser*)&Prs);
+
+    if (!Hid.SetReportParser(0, &Uni))
+        ErrorMessage<uint8_t>(PSTR("SetReportParser"), 1 );
 }
 
 void loop() {
